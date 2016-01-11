@@ -7,24 +7,25 @@ import org.ebayopensource.nexus.plugins.artifactusage.store.GAV;
 
 /**
  * The result of calculating the usage of a number of artifacts.
- * 
+ *
  * @author Saleem Shafi
  */
 public class ArtifactUsageCalculationResult {
-	private boolean successful = true;
-	private Collection<GAV> updatedArtifacts = new ArrayList<GAV>();
 
-	public Collection<GAV> getUpdatedArtifacts() {
-		return this.updatedArtifacts;
-	}
+    private boolean successful = true;
+    private final Collection<GAV> updatedArtifacts = new ArrayList<>();
 
-	public boolean isSuccessful() {
-		return successful;
-	}
+    public Collection<GAV> getUpdatedArtifacts() {
+        return this.updatedArtifacts;
+    }
 
-	public void addResult(ArtifactUsageCalculationRepositoryResult result) {
-		this.updatedArtifacts.addAll(result.getUpdatedArtifacts());
-		this.successful &= result.isSuccessful();
-	}
+    public boolean isSuccessful() {
+        return successful;
+    }
+
+    public void addResult(ArtifactUsageCalculationRepositoryResult result) {
+        this.updatedArtifacts.addAll(result.getUpdatedArtifacts());
+        this.successful &= result.isSuccessful();
+    }
 
 }

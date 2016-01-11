@@ -4,19 +4,20 @@ import java.util.Collection;
 import java.util.HashSet;
 
 public class DependencyList {
-	private Collection<GAV> dependencies = new HashSet<GAV>();
-	private long lastCalculated;
 
-	public DependencyList(Collection<GAV> dependencies) {
-		this.dependencies = dependencies;
-		this.lastCalculated = System.currentTimeMillis();
-	}
+    private Collection<GAV> dependencies = new HashSet<>();
+    private final long lastCalculated;
 
-	public Collection<GAV> getDependencies() {
-		return this.dependencies;
-	}
+    public DependencyList(Collection<GAV> dependencies) {
+        this.dependencies = dependencies;
+        this.lastCalculated = System.currentTimeMillis();
+    }
 
-	public long getLastCalculated() {
-		return this.lastCalculated;
-	}
+    public Collection<GAV> getDependencies() {
+        return this.dependencies;
+    }
+
+    public long getLastCalculated() {
+        return this.lastCalculated;
+    }
 }

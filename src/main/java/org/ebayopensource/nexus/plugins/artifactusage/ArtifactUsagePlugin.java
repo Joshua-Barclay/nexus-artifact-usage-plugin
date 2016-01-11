@@ -10,14 +10,14 @@ import javax.inject.Named;
 @EagerSingleton
 public class ArtifactUsagePlugin extends PluginIdentity {
 
-	public static final String ID_PREFIX = "artifact-usage";
+    public static final String ID_PREFIX = "artifact-usage";
 
-	public static final String GROUP_ID = "org.ebayopensource.nexus.plugins";
+    public static final String GROUP_ID = "org.ebayopensource.nexus.plugins";
 
-	public static final String ARTIFACT_ID = ID_PREFIX + "-plugin";
+    public static final String ARTIFACT_ID = ID_PREFIX + "-plugin";
 
-	@Inject
-	public ArtifactUsagePlugin() throws Exception {
-		super(GROUP_ID, ARTIFACT_ID);
-	}
+    @Inject
+    public ArtifactUsagePlugin() throws Exception {
+        super(GROUP_ID, ARTIFACT_ID);
+    }
 }

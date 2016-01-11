@@ -10,6 +10,7 @@ import org.sonatype.aether.resolution.ArtifactDescriptorRequest;
 import org.sonatype.aether.resolution.ArtifactDescriptorResult;
 import org.sonatype.aether.util.artifact.DefaultArtifact;
 import org.sonatype.nexus.plugins.mavenbridge.NexusAether;
+import org.sonatype.nexus.proxy.NoSuchRepositoryException;
 import org.sonatype.nexus.proxy.registry.RepositoryRegistry;
 import org.sonatype.nexus.proxy.repository.Repository;
 
@@ -25,58 +26,64 @@ import javax.inject.Singleton;
 @Named("AetherBased")
 public class AetherBasedDependencyResolver implements DependencyResolver {
 
-	private final Logger logger;
+    private final Logger logger;
 
-	private RepositoryRegistry repositoryRegistry;
+    private final RepositoryRegistry repositoryRegistry;
 
-	private NexusAether nexusAether;
+    private final NexusAether nexusAether;
 
-	@Inject
-	public AetherBasedDependencyResolver(Logger logger,RepositoryRegistry repositoryRegistry,NexusAether nexusAether) {
-		this.logger = logger;
-		this.repositoryRegistry = repositoryRegistry;
-		this.nexusAether = nexusAether;
-	}
-	
-	public Collection<GAV> resolveDependencies(GAV artifact) throws IOException {
-		Collection<GAV> artifactDependencies = new ArrayList<GAV>();
+    @Inject
+    public AetherBasedDependencyResolver(Logger logger, RepositoryRegistry repositoryRegistry, NexusAether nexusAether) {
+        this.logger = logger;
+        this.repositoryRegistry = repositoryRegistry;
+        this.nexusAether = nexusAether;
+    }
 
-		ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
-		descriptorRequest.setArtifact(new DefaultArtifact(artifact.toString()));
-		for (Repository repo : this.repositoryRegistry.getRepositories()) {
-			if (repo.getLocalUrl() != null) {
-				descriptorRequest.addRepository(new RemoteRepository(repo
-						.getId(), "default", repo.getLocalUrl()));
-			}
-		}
+    @Override
+    public Collection<GAV> resolveDependencies(GAV artifact, String repoId) throws IOException {
+        Collection<GAV> artifactDependencies = new ArrayList<>();
 
-		try {
-			ArtifactDescriptorResult descriptorResult = this
-					.getRepositorySystem().readArtifactDescriptor(
-							this.getRepositorySession(), descriptorRequest);
-			for (org.sonatype.aether.graph.Dependency dependency : descriptorResult
-					.getDependencies()) {
-				logger.debug("{} depends on {}", artifact, dependency.getArtifact());
-				artifactDependencies.add(new GAV(dependency.getArtifact()
-						.getGroupId(),
-						dependency.getArtifact().getArtifactId(), dependency
-								.getArtifact().getVersion()));
-			}
-		} catch (ArtifactDescriptorException e) {
-			throw new IOException(e);
-		}
+        ArtifactDescriptorRequest descriptorRequest = new ArtifactDescriptorRequest();
+        descriptorRequest.setArtifact(new DefaultArtifact(artifact.toString()));
+        Repository repo;
+        try {
+            repo = this.repositoryRegistry.getRepository(repoId);
+        } catch (NoSuchRepositoryException e1) {
+            logger.error("Cannot find repo with ID: " + repoId, e1);
+            throw new IOException(e1);
+        }
+        if (repo.getLocalUrl() != null) {
+            descriptorRequest.addRepository(new RemoteRepository(repo
+                    .getId(), "default", repo.getLocalUrl()));
+        }
 
-		return artifactDependencies;
-	}
+        try {
+            ArtifactDescriptorResult descriptorResult = this
+                    .getRepositorySystem().readArtifactDescriptor(
+                            this.getRepositorySession(), descriptorRequest);
+            for (org.sonatype.aether.graph.Dependency dependency : descriptorResult
+                    .getDependencies()) {
+                logger.debug("{} depends on {}", artifact, dependency.getArtifact());
+                artifactDependencies.add(new GAV(dependency.getArtifact()
+                        .getGroupId(),
+                        dependency.getArtifact().getArtifactId(), dependency
+                        .getArtifact().getVersion()));
+            }
+        } catch (ArtifactDescriptorException e) {
+            throw new IOException(e);
+        }
 
-	// i'm not sure we really need to synchronize this
-	private RepositorySystemSession getRepositorySession() {
-		return nexusAether.getDefaultRepositorySystemSession();
-	}
+        return artifactDependencies;
+    }
 
-	// i'm not sure we really need to synchronize this
-	private RepositorySystem getRepositorySystem() {
-		return nexusAether.getRepositorySystem();
-  }
+    // i'm not sure we really need to synchronize this
+    private RepositorySystemSession getRepositorySession() {
+        return nexusAether.getDefaultRepositorySystemSession();
+    }
+
+    // i'm not sure we really need to synchronize this
+    private RepositorySystem getRepositorySystem() {
+        return nexusAether.getRepositorySystem();
+    }
 
 }

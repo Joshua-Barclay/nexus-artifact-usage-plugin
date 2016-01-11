@@ -5,40 +5,41 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ArtifactUser {
-	private final GAV artifact;
-	private final Set<ArtifactUser> artifactUsers = new HashSet<ArtifactUser>();
 
-	public ArtifactUser(GAV artifact) {
-		this.artifact = artifact;
-	}
+    private final GAV artifact;
+    private final Set<ArtifactUser> artifactUsers = new HashSet<>();
 
-	public Collection<ArtifactUser> getArtifactUsers() {
-		return this.artifactUsers;
-	}
+    public ArtifactUser(GAV artifact) {
+        this.artifact = artifact;
+    }
 
-	public void addArtifactUser(ArtifactUser artifactUser) {
-		this.artifactUsers.add(artifactUser);
-	}
+    public Collection<ArtifactUser> getArtifactUsers() {
+        return this.artifactUsers;
+    }
 
-	public void removeArtifactUser(ArtifactUser artifactUser) {
-		this.artifactUsers.remove(artifactUser);
-	}
+    public void addArtifactUser(ArtifactUser artifactUser) {
+        this.artifactUsers.add(artifactUser);
+    }
 
-	@Override
-	public int hashCode() {
-		return artifact.hashCode();
-	}
+    public void removeArtifactUser(ArtifactUser artifactUser) {
+        this.artifactUsers.remove(artifactUser);
+    }
 
-	public GAV getGav() {
-		return this.artifact;
-	}
+    @Override
+    public int hashCode() {
+        return artifact.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof ArtifactUser) {
-			return this.artifact.equals(((ArtifactUser) obj).artifact);
-		}
-		return false;
-	}
+    public GAV getGav() {
+        return this.artifact;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ArtifactUser) {
+            return this.artifact.equals(((ArtifactUser) obj).artifact);
+        }
+        return false;
+    }
 
 }

@@ -11,85 +11,142 @@ import javax.inject.Singleton;
 /**
  * An in-memory representation of the artifact usage data. This version would
  * have to be recreated any time the server goes down and comes back up again.
- * 
+ *
  * @author Saleem Shafi
  */
 @Singleton
 @Named("InMemory")
 public class InMemoryArtifactUsageStore implements ArtifactUsageStore {
 
-	private Map<GAV, ArtifactUser> userMap = new ConcurrentHashMap<GAV, ArtifactUser>();
-	// we need this one, too, so that we can clean up old usage data if
-	// an artifact is updated
-	private Map<GAV, DependencyList> dependencyMap = new HashMap<GAV, DependencyList>();
-	// allow us to convert the a StorageFileItem path to an Artifact so that we
-	// can coordinate the IsAlreadyCalculated logic with the actual usage
-	// stuff
-	private Map<String, GAV> pathMap = new HashMap<String, GAV>();
+    private final Map<GAV, ArtifactUser> userMap = new ConcurrentHashMap<>();
+    // we need this one, too, so that we can clean up old usage data if
+    // an artifact is updated
+    private final Map<GAV, DependencyList> dependencyMap = new HashMap<>();
+    // allow us to convert the a StorageFileItem path to an Artifact so that we
+    // can coordinate the IsAlreadyCalculated logic with the actual usage
+    // stuff
+    private final Map<String, GAV> pathMap = new HashMap<>();
 
-	public Collection<ArtifactUser> getArtifactUsers(GAV artifact) {
-		Collection<ArtifactUser> users = getOrCreateArtifactUser(artifact)
-				.getArtifactUsers();
-		return users;
-	}
+    @Override
+    public Collection<ArtifactUser> getArtifactUsers(GAV artifact) {
+        Collection<ArtifactUser> users = getOrCreateArtifactUser(artifact)
+                .getArtifactUsers();
+        return users;
+    }
 
-	public void addDependencies(GAV artifact, Collection<GAV> dependencies,
-			String artifactPath) {
+    @Override
+    public void addDependencies(GAV artifact, Collection<GAV> dependencies,
+            String artifactPath) {
 
-		// remove all of the old usage data
-		this.removeArtifactUser(artifact);
+        // remove all of the old usage data
+        this.removeArtifactUser(artifact);
 
-		// remember the dependencies so that we can clean up next time
-		dependencyMap.put(artifact, new DependencyList(dependencies));
+        // remember the dependencies so that we can clean up next time
+        dependencyMap.put(artifact, new DependencyList(dependencies));
 
-		// remember where the associated file is located so we can compare
-		// file modification time next time we try to calculate
-		if (artifactPath != null) {
-			this.pathMap.put(artifactPath, artifact);
-		}
-		if (dependencies != null) {
-			// go through all of the dependencies
-			for (GAV dependency : dependencies) {
-				ArtifactUser usage = getOrCreateArtifactUser(dependency);
-				usage.addArtifactUser(getOrCreateArtifactUser(artifact));
-			}
-		}
-	}
+        // remember where the associated file is located so we can compare
+        // file modification time next time we try to calculate
+        if (artifactPath != null) {
+            this.pathMap.put(artifactPath, artifact);
+        }
+        if (dependencies != null) {
+            // go through all of the dependencies
+            for (GAV dependency : dependencies) {
+                ArtifactUser usage = getOrCreateArtifactUser(dependency);
+                usage.addArtifactUser(getOrCreateArtifactUser(artifact));
+            }
+        }
+    }
 
-	private ArtifactUser getOrCreateArtifactUser(GAV artifact) {
-		ArtifactUser usage = userMap.get(artifact);
-		if (usage == null) {
-			usage = new ArtifactUser(artifact);
-			userMap.put(artifact, usage);
-		}
-		return usage;
-	}
+    private ArtifactUser getOrCreateArtifactUser(GAV artifact) {
+        ArtifactUser usage = userMap.get(artifact);
+        if (usage == null) {
+            usage = new ArtifactUser(artifact);
+            userMap.put(artifact, usage);
+        }
+        return usage;
+    }
 
-	public boolean isAlreadyCalculated(String path, long lastModifiedTime) {
-		GAV artifact = this.pathMap.get(path);
-		if (artifact == null)
-			return false;
-		DependencyList dependencies = this.dependencyMap.get(artifact);
-		return (dependencies != null && dependencies.getLastCalculated() > lastModifiedTime);
-	}
+    @Override
+    public boolean isAlreadyCalculated(String path, long lastModifiedTime) {
+        GAV artifact = this.pathMap.get(path);
+        if (artifact == null) {
+            return false;
+        }
+        DependencyList dependencies = this.dependencyMap.get(artifact);
+        return (dependencies != null && dependencies.getLastCalculated() > lastModifiedTime);
+    }
 
-	// Removing an artifact from this map is handled as the case of adding
-	// an artifact with no dependencies
-	public void removeArtifact(GAV artifact) {
-		this.addDependencies(artifact, null, null);
-	}
+    // Removing an artifact from this map is handled as the case of adding
+    // an artifact with no dependencies
+    @Override
+    public void removeArtifact(GAV artifact) {
+        this.addDependencies(artifact, null, null);
+    }
 
-	protected void removeArtifactUser(GAV user) {
-		DependencyList oldDependencies = dependencyMap.get(user);
-		if (oldDependencies != null
-				&& oldDependencies.getDependencies() != null) {
-			for (GAV dependency : oldDependencies.getDependencies()) {
-				ArtifactUser dependencyUser = getOrCreateArtifactUser(dependency);
-				dependencyUser
-						.removeArtifactUser(getOrCreateArtifactUser(user));
-			}
-		}
+    protected void removeArtifactUser(GAV user) {
+        DependencyList oldDependencies = dependencyMap.get(user);
+        if (oldDependencies != null
+                && oldDependencies.getDependencies() != null) {
+            for (GAV dependency : oldDependencies.getDependencies()) {
+                ArtifactUser dependencyUser = getOrCreateArtifactUser(dependency);
+                dependencyUser
+                        .removeArtifactUser(getOrCreateArtifactUser(user));
+            }
+        }
 
-	}
+    }
+
+    @Override
+    public String toString() {
+        if (dependencyMap.isEmpty()) {
+            return "Memeory artifact store is empty";
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("DUMPING GAV LIST\n");
+        for (GAV gav : dependencyMap.keySet()) {
+            DependencyList l = dependencyMap.get(gav);
+            builder.append("\t");
+            builder.append(gav.toString()).append(": ");
+            if (l == null || l.getDependencies() == null) {
+                builder.append(" null DependencyList");
+            } else {
+                builder.append(" DependencyList size: ").append(l.getDependencies().size());
+                builder.append("\n");
+                for (GAV d : l.getDependencies()) {
+                    builder.append("\t");
+                    builder.append("\t");
+                    builder.append(d);
+                    builder.append("\n");
+                }
+            }
+            builder.append("\n");
+
+        }
+
+        builder.append("DUMPING USED LIST\n");
+        for (GAV gav : userMap.keySet()) {
+            ArtifactUser a = userMap.get(gav);
+            builder.append("\t");
+            builder.append(gav.toString()).append(": ");
+            if (a == null || a.getArtifactUsers() == null) {
+                builder.append(" null getArtifactUsers");
+            } else {
+                builder.append(" getArtifactUsers size: ").append(a.getArtifactUsers().size());
+                builder.append("\n");
+                for (ArtifactUser au : a.getArtifactUsers()) {
+                    builder.append("\t");
+                    builder.append("\t");
+                    builder.append(au.getGav());
+                    builder.append("\n");
+                }
+            }
+            builder.append("\n");
+
+        }
+
+        return builder.toString();
+    }
 
 }

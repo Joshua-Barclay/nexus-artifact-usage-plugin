@@ -14,6 +14,7 @@ public class TestInMemoryArtifactUsageStore extends TestCase {
 	private InMemoryArtifactUsageStore store;
 
 	@Before
+        @Override
 	public void setUp() throws Exception {
 		store = new InMemoryArtifactUsageStore();
 		GAV levelA_artifact1 = new GAV("a:one:1.0"); // used by 2

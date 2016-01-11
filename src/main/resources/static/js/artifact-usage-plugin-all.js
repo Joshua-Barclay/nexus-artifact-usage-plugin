@@ -61,10 +61,8 @@ Sonatype.repoServer.ArtifactUsageTreePanel = function(config) {
 		enableDD : false,
 		tbar : [
 				{
-					text : 'Refresh',
-					icon : Sonatype.config.resourcePath
-							+ '/images/icons/arrow_refresh.png',
-					cls : 'x-btn-text-icon',
+					text : 'Refresh Usage',
+					cls : 'x-btn-text',
 					scope : this,
 					handler : this.refreshHandler
 				},
@@ -78,9 +76,7 @@ Sonatype.repoServer.ArtifactUsageTreePanel = function(config) {
 				' ',
 				{
 					text : 'Download Tree As XML',
-					icon : Sonatype.config.resourcePath
-							+ '/images/icons/page_white_put.png',
-					cls : 'x-btn-text-icon',
+					cls : 'x-btn-text',
 					scope : this,
 					handler : this.downloadUsageTree
 				},
@@ -199,13 +195,13 @@ Ext
 						this.root.setText(gav);
 						this.root.attributes.localStorageUpdated = false;
 						this.root.attributes.expanded = false;
-						this.root.id = Sonatype.config.servicePath+"/usage/"
+						this.root.id = Sonatype.config.servicePath+"/usage?gav="
 								+ this.root.text;
 						this.root.reload();
 					},
 
 					indexBrowserExpandFollowup : function(node) {
-						var urlBase = Sonatype.config.servicePath+"/usage/";
+						var urlBase = Sonatype.config.servicePath+"/usage?gav=";
 						for ( var j = 0; j < node.childNodes.length; j++) {
 							var childNode = node.childNodes[j];
 							childNode.id = urlBase + childNode.text;
@@ -269,8 +265,8 @@ Ext
 
 					downloadUsageTree : function(button, e) {
 						Sonatype.utils
-								.openWindow("/nexus/service/local/usageGraph/"
-										+ this.root.text + ".xml");
+								.openWindow("/nexus/service/local/usageGraph?xml=true&gav="
+										+ this.root.text);
 					},
 
 					startSearch : function(p) {
@@ -435,7 +431,7 @@ Ext.extend(Ext.tree.SonatypeMultiLevelTreeLoader, Ext.tree.SonatypeTreeLoader,
 				for ( var i = 0, len = o.length; i < len; i++) {
 					var n = this.createNode(o[i]);
 					if (n) {
-            n.setIcon("icons/repoServer/jar-jar.png");
+            n.setIcon("static/icons/jar-jar.png");
 						node.appendChild(n)
 						if (o[i].data) {
 							this.addNodes(n, o[i].data);
@@ -529,7 +525,7 @@ Ext.extend(Sonatype.repoServer.ArtifactUsageListPanel, Sonatype.panels.GridViewe
 				+ rootArtifact.artifactId + ":"
 				+ rootArtifact.baseVersion;
 
-		this.url = Sonatype.config.servicePath+"/usageList/"+gav,
+		this.url = Sonatype.config.servicePath+"/usageList?gav="+gav,
 		this.dataStore.url = this.url;
 		this.dataStore.proxy = new Ext.data.HttpProxy({
 			url : this.url

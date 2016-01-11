@@ -80,11 +80,13 @@ public class TestDefaultArtifactUsageCalculator extends NexusTestSupport {
 		return pomFileItem;
 	}
 
+        @Override
     protected void assertEquals( Object expected, Object actual )
     {
         MatcherAssert.assertThat( actual, Matchers.equalTo( expected ) );
     }
 
+        @Override
     protected void assertNotNull( Object obj )
     {
         Assert.assertNotNull( obj );

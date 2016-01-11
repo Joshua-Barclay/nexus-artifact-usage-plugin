@@ -6,5 +6,6 @@ import java.util.Collection;
 import org.ebayopensource.nexus.plugins.artifactusage.store.GAV;
 
 public interface DependencyResolver {
-	Collection<GAV> resolveDependencies(GAV artifact) throws IOException;
+
+    Collection<GAV> resolveDependencies(GAV artifact, String repoId) throws IOException;
 }

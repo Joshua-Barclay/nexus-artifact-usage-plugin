@@ -21,63 +21,59 @@ import javax.inject.Singleton;
 /**
  * Event handler that updates the artifact usage data whenever an artifact is
  * added or deleted from the repository.
- * 
+ *
  * @author Saleem Shafi
  */
 @Singleton
 @Named("ArtifactEventInspector")
 public class ArtifactUsageEventInspector implements EventSubscriber {
 
-	private final Logger logger;
+    private final Logger logger;
 
-	private final ArtifactUsageCalculator calculator;
+    private final ArtifactUsageCalculator calculator;
 
-	@Inject
-	public ArtifactUsageEventInspector(final Logger logger, final ArtifactUsageCalculator calculator) {
-		this.logger = logger;
-		this.calculator = calculator;
-	}
+    @Inject
+    public ArtifactUsageEventInspector(final Logger logger, final ArtifactUsageCalculator calculator) {
+        this.logger = logger;
+        this.calculator = calculator;
+    }
 
-	@Subscribe
-	public void onItemDelete(final RepositoryItemEventDelete evt) {
-		try {
-			// we only care about POM files
-			final StorageItem item = evt.getItem();
-			if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
-				calculator.removeArtifactUsage((StorageFileItem) item);
-			}
-		} catch (final IOException e) {
-			logger.error("Error processing artifact usage during event", e);
-		}
-	}
+    @Subscribe
+    public void onItemDelete(final RepositoryItemEventDelete evt) {
+        try {
+            // we only care about POM files
+            final StorageItem item = evt.getItem();
+            if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
+                calculator.removeArtifactUsage((StorageFileItem) item);
+            }
+        } catch (final IOException e) {
+            logger.error("Error processing artifact usage during event", e);
+        }
+    }
 
-	@Subscribe
-	public void onItemCache(final RepositoryItemEventCache evt) {
-		try {
-			final StorageItem item = evt.getItem();
-			if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
-				calculator.calculateArtifactUsage((StorageFileItem) item);
-			}
-		} catch (final IOException e) {
-			logger.error("Error processing artifact usage during event", e);
-		} catch (final ArtifactDescriptorException e) {
-			logger.error("Error processing artifact usage during event", e);
-		}
-	}
+    @Subscribe
+    public void onItemCache(final RepositoryItemEventCache evt) {
+        try {
+            final StorageItem item = evt.getItem();
+            if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
+                calculator.calculateArtifactUsage((StorageFileItem) item);
+            }
+        } catch (final IOException | ArtifactDescriptorException e) {
+            logger.error("Error processing artifact usage during event", e);
+        }
+    }
 
-	@Subscribe
-	public void onItemStore(final RepositoryItemEventStore evt) {
-		try {
-			// we only care about POM files
-			final StorageItem item = evt.getItem();
-			if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
-				calculator.calculateArtifactUsage((StorageFileItem) item);
-			}
-		} catch (final IOException e) {
-			logger.error("Error processing artifact usage during event", e);
-		} catch (final ArtifactDescriptorException e) {
-			logger.error("Error processing artifact usage during event", e);
-		}
-	}
+    @Subscribe
+    public void onItemStore(final RepositoryItemEventStore evt) {
+        try {
+            // we only care about POM files
+            final StorageItem item = evt.getItem();
+            if (item instanceof StorageFileItem && item.getPath().endsWith(".pom")) {
+                calculator.calculateArtifactUsage((StorageFileItem) item);
+            }
+        } catch (final IOException | ArtifactDescriptorException e) {
+            logger.error("Error processing artifact usage during event", e);
+        }
+    }
 
 }
